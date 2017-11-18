@@ -1,0 +1,53 @@
+import urllib.request
+from bs4 import BeautifulSoup
+import pandas as pd
+
+title = []
+picHref = []
+inq = []
+score = []
+star = []
+commentNum = []
+otherMessages = []
+i = 0
+while i < 10:
+    y = (i*25)
+    i += 1
+    url = 'https://movie.douban.com/top250?start={}&filter='.format(y)
+    html = urllib.request.urlopen(url)
+    soup = BeautifulSoup(html,"html.parser")
+    dates = soup.find_all('div',attrs={'class':'item'})
+#获取图片链接
+    for date in dates:
+        picHref.append(date.find_all('img')[0].get('src'))
+#获取标题
+    for date in dates:
+        z = date.find_all('span',attrs={'class':'title'})[0]
+        title.append(z.string)
+#获取电影标签
+    for date in dates:
+        try:
+            u = date.find_all('span',attrs={'class':'inq'})[0]
+            inq.append(u.string)
+        except IndexError:
+            pass
+
+
+
+#获取星星数，平均得分，评价人数
+    for date in dates:
+        w = date.find_all('div',attrs={'class':'star'})[0]('span')
+        star.append(w[0].get('class')[0])  #星星数
+        score.append(w[1].string)  #平均得分
+        commentNum.append(w[3].string)  #评论人数
+
+#获取电影导演等信息
+    pDates = soup.find_all('div',attrs={'class':'bd'})
+    for date in pDates:
+        idate = date.find_all('p',attrs={'class':''})
+        if len(idate) == 1:
+            otherMessages.append(idate[0])
+
+url_df = pd.DataFrame([title, otherMessages, inq, score, star, commentNum, picHref]).T
+url_df.to_csv(r'C:\Users\垃圾佬\Desktop\dew\doubanTop250.csv')
+
